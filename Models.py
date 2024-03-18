@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch import optim
 from sklearn.utils import class_weight
 from torch.optim.lr_scheduler import ExponentialLR, MultiStepLR, ReduceLROnPlateau
-from sklearn.metrics import balanced_accuracy_score, f1_score
+from sklearn.metrics import f1_score
 
 def init_weights(l):
         """Weights initialization for linear layers"""
@@ -87,15 +87,15 @@ class CNNModel1(nn.Module):#input has size 3x128x128
             optim.zero_grad() 
             input_features = batch[0].to(device)
             target = nn.functional.one_hot(batch[1], 14).to(device)  #One hot  encode for cross entropy loss
-            logits = self(input_features)  #Model's output. To get probabilities: call softmax on logits. The chosenn loss fun expects the logits.
+            logits = self(input_features)  #Model's output. To get probabilities: call softmax on logits. The chosen loss fun expects the logits.
             ce = loss_(logits, target.float()) # Compute the loss
-            ce.backward() # Backpropagate and calculate gradients wrt loss, this go in reverse into the computational graph--> gradient for each weight matrix
-            torch.nn.utils.clip_grad_norm_(self.parameters(), 1) #Clip gradients to avoid large gradients (risk: overflow and have to rerune entire training round). Clipping divides by gradient's norm, thus the direction doesn't change.
+            ce.backward() # Backpropagate and calculate gradients, this go in reverse into the computational graph--> gradient for each weight matrix
+            torch.nn.utils.clip_grad_norm_(self.parameters(), 1) #Clip gradients to avoid large gradients. Clipping divides by gradient's norm, thus the direction doesn't change.
             optim.step() # Update model parameters (weights): gradient descent update step. 
             losses.append(ce.detach().cpu().item()) #Transform loss to scalar.
             predicted_classes = logits.argmax(axis=1)  #Take as predicted class the one with highest probability.
             observed_classes = target.argmax(axis=1)
-            sample_class_weights=[class_weights[i] for i in observed_classes]  #To compute balanced accuracy.
+            sample_class_weights=[class_weights[i] for i in observed_classes]  #To compute f1 score.
             f1_train=f1_score(y_true=observed_classes, y_pred=predicted_classes, average='weighted', sample_weight=sample_class_weights)
             accs.append(f1_train)
             if(tensorboard_writer):
