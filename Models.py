@@ -72,7 +72,7 @@ class CNNModel1(nn.Module):
         return sum([param.numel() for param in self.parameters() if param.requires_grad])
     
     def optimizer(self):
-        if(self.optim_type=='ADAM'):
+        if(self.optim_type == 'ADAM'):
             return Adam(self.parameters(),lr=self.lr, weight_decay=self.weight_decay)  #set weigth_decay for L2 regularization
         else:
             return SGD(self.parameters(),lr=self.lr, weight_decay=self.weight_decay, momentum=0.9)  #set weigth_decay for L2 regularization
@@ -83,10 +83,10 @@ class CNNModel1(nn.Module):
         accs = []
         #Train:
         for batch in dataloader: 
-            classes=np.array(torch.unique(batch[1]))
-            if(len(classes)<14):
+            classes = np.array(torch.unique(batch[1]))
+            if (len(classes) < 14):
                 continue
-            loss_=self.loss_fn(weight=torch.Tensor(class_weights))  #Add weighting to the loss 
+            loss_ = self.loss_fn(weight=torch.Tensor(class_weights))  #Add weighting to the loss 
             optim.zero_grad() 
             input_features = batch[0].to(device)
             target = nn.functional.one_hot(batch[1], 14).to(device)  #One hot  encode for cross entropy loss
@@ -98,10 +98,10 @@ class CNNModel1(nn.Module):
             losses.append(ce.detach().cpu().item()) #Transform loss to scalar.
             predicted_classes = logits.argmax(axis=1)  #Take as predicted class the one with highest probability.
             observed_classes = target.argmax(axis=1)
-            sample_class_weights=[class_weights[i] for i in observed_classes]  #To compute f1 score.
-            f1_train=f1_score(y_true=observed_classes, y_pred=predicted_classes, average='weighted', sample_weight=sample_class_weights)
+            sample_class_weights = [class_weights[i] for i in observed_classes]  #To compute f1 score.
+            f1_train = f1_score(y_true=observed_classes, y_pred=predicted_classes, average='weighted', sample_weight=sample_class_weights)
             accs.append(f1_train)
-            if(tensorboard_writer):
+            if (tensorboard_writer):
                 tensorboard_writer.add_scalar('training loss',
                                 np.mean(losses),
                                 epoch)
@@ -116,7 +116,7 @@ class CNNModel1(nn.Module):
             for batch in dataloader:
                 if(len(torch.unique(batch[1]))<14):
                     continue
-                loss_=self.loss_fn() 
+                loss_ = self.loss_fn() 
                 input_features = batch[0].to(device)
                 target = nn.functional.one_hot(batch[1], 14).to(device)
                 logits = self(input_features)
@@ -124,8 +124,8 @@ class CNNModel1(nn.Module):
                 losses.append(ce.detach().cpu().item())
                 predicted_classes = logits.argmax(axis=1)
                 observed_classes = target.argmax(axis=1)
-                sample_class_weights=[class_weights[i] for i in observed_classes]
-                f1_val=f1_score(y_true=observed_classes, y_pred=predicted_classes, average='weighted', sample_weight=sample_class_weights)
+                sample_class_weights = [class_weights[i] for i in observed_classes]
+                f1_val = f1_score(y_true=observed_classes, y_pred=predicted_classes, average='weighted', sample_weight=sample_class_weights)
                 accs.append(f1_val)
                 tensorboard_writer.add_scalar('test loss',
                                     np.mean(losses),
@@ -133,12 +133,12 @@ class CNNModel1(nn.Module):
         return [np.mean(losses), np.mean(accs)]
     
     def fit(self, train_dataloader, test_dataloader, device, class_weights_train, class_weights_test, tensorboard_writer=None):
-        optim=self.optimizer()
-        train_lss=[]
-        test_lss=[]
-        train_accs=[]
-        test_accs=[]
-        scheduler=ExponentialLR(optim,gamma=0.9)
+        optim = self.optimizer()
+        train_lss = []
+        test_lss = []
+        train_accs = []
+        test_accs = []
+        scheduler = ExponentialLR(optim,gamma=0.9)
         for epoch in range(self.numEpochs): #train and evaluate model
             train_loss = self.train_epoch(train_dataloader, device,optim, epoch,class_weights_train, tensorboard_writer)
             if(self.scheduler):
@@ -156,9 +156,9 @@ class CNNModel1(nn.Module):
     
     def predict(self,input,device):
         self.eval() 
-        input=input.to(device)
+        input_img = input_img.to(device)
         logits = self(input).detach()
-        pred=logits.argmax(axis=1).numpy()
+        pred = logits.argmax(axis=1).numpy()
         return pred
     
 class CNNModel1_RES(nn.Module):
@@ -231,11 +231,11 @@ class CNNModel1_RES(nn.Module):
         self.train()
         accs = []
         for batch in dataloader: 
-            classes=np.array(torch.unique(batch[1]))
-            if(len(classes)<10):
+            classes = np.array(torch.unique(batch[1]))
+            if(len(classes) < 10):
                 continue
-            class_weights=class_weight.compute_class_weight(class_weight='balanced', classes=classes, y=np.array(batch[1]))
-            loss_=self.loss_fn(weight=torch.Tensor(class_weights))  #Add weighting to the loss 
+            class_weights = class_weight.compute_class_weight(class_weight='balanced', classes=classes, y=np.array(batch[1]))
+            loss_ = self.loss_fn(weight=torch.Tensor(class_weights))  #Add weighting to the loss 
             optim.zero_grad() 
             input_features = batch[0].to(device)
             target = nn.functional.one_hot(batch[1], 10).to(device)  #One hot  encode for cross entropy loss
@@ -273,20 +273,20 @@ class CNNModel1_RES(nn.Module):
                 losses.append(ce.detach().cpu().item())
                 predicted_classes = logits.argmax(axis=1)
                 observed_classes = target.argmax(axis=1)
-                sample_class_weights=[class_weights[i] for i in observed_classes]  #To compute balanced accuracy
-                balanced_accuracy=balanced_accuracy_score(y_true=observed_classes,y_pred=predicted_classes,sample_weight=sample_class_weights)
+                sample_class_weights = [class_weights[i] for i in observed_classes]  #To compute balanced accuracy
+                balanced_accuracy = balanced_accuracy_score(y_true=observed_classes,y_pred=predicted_classes,sample_weight=sample_class_weights)
                 accs.append(balanced_accuracy)
                 tensorboard_writer.add_scalar('test loss',
                                     np.mean(losses),
                                     epoch)
         return np.mean(losses), np.mean(accs)
     def fit(self, train_dataloader, test_dataloader, device, tensorboard_writer=None):
-        optim=self.optimizer()
+        optim = self.optimizer()
         scheduler = MultiStepLR(optim, gamma=0.1, milestones=[10])
-        train_lss=[]
-        test_lss=[]
-        train_accs=[]
-        test_accs=[]
+        train_lss = []
+        test_lss = []
+        train_accs = []
+        test_accs = []
         for epoch in range(self.numEpochs): #train model
             train_loss = self.train_epoch(train_dataloader, device,optim, epoch, tensorboard_writer)
             if(self.scheduler):
