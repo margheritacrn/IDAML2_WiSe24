@@ -17,13 +17,13 @@ class CustDataset(torch.utils.data.Dataset):
     def __init__(self, subset, transform=transforms.ToTensor(), add_noise=False, no_labels=False):
         self.subset = subset
         self.transform = transform
-        self.add_noise=add_noise
-        self.no_labels=no_labels
+        self.add_noise = add_noise
+        self.no_labels = no_labels
     def __getitem__(self, indices):
         x, y = self.subset[indices]
         if(self.add_noise):
-            x=self.transform(x)
-            x=x+(0.8)*torch.randn(x.shape)
+            x = self.transform(x)
+            x = x+(0.8)*torch.randn(x.shape)
             return torch.clamp(x, min=0, max=1) 
         elif(self.no_labels):
             return self.transform(x)
